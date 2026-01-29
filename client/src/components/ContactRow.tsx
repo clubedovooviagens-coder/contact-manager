@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Contact } from '@/hooks/useContacts';
+import { Contact, ContactTemperature } from '@/hooks/useContacts';
 import { Copy, Check, Edit2, Save, X, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ interface ContactRowProps {
   onToggleSelected: (id: string) => void;
   onEditName: (id: string, newName: string) => void;
   onDelete: (id: string) => void;
+  onSetTemperature: (id: string, temperature: ContactTemperature) => void;
 }
 
 export default function ContactRow({
@@ -21,10 +22,33 @@ export default function ContactRow({
   onToggleSelected,
   onEditName,
   onDelete,
+  onSetTemperature,
 }: ContactRowProps) {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(contact.name);
+
+  const getTemperatureColor = (temp: ContactTemperature) => {
+    switch (temp) {
+      case 'frio':
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'morno':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'quente':
+        return 'bg-red-100 text-red-800 border-red-300';
+    }
+  };
+
+  const getTemperatureLabel = (temp: ContactTemperature) => {
+    switch (temp) {
+      case 'frio':
+        return 'Frio';
+      case 'morno':
+        return 'Morno';
+      case 'quente':
+        return 'Quente';
+    }
+  };
 
   const handleCopyPhone = async () => {
     try {
@@ -142,6 +166,24 @@ export default function ContactRow({
       {/* Telefone */}
       <div className="hidden sm:block">
         <p className="text-sm text-muted-foreground font-mono">{contact.phone}</p>
+      </div>
+
+      {/* Classificação de Temperatura */}
+      <div className="flex items-center gap-1">
+        {(['frio', 'morno', 'quente'] as ContactTemperature[]).map((temp) => (
+          <button
+            key={temp}
+            onClick={() => onSetTemperature(contact.id, temp)}
+            className={`px-2 py-1 rounded text-xs font-medium border transition-all ${
+              contact.temperature === temp
+                ? getTemperatureColor(temp)
+                : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
+            }`}
+            title={`Classificar como ${getTemperatureLabel(temp)}`}
+          >
+            {getTemperatureLabel(temp)}
+          </button>
+        ))}
       </div>
 
       {/* Botões de Ação */}

@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import ContactRow from '@/components/ContactRow';
-import { useContacts } from '@/hooks/useContacts';
+import { useContacts, ContactTemperature } from '@/hooks/useContacts';
 import { Phone, Filter, AlertCircle, Copy, Trash2, User } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
@@ -29,8 +29,13 @@ export default function Home() {
     editName,
     deleteContact,
     addContact,
+    setTemperature,
+    getTemperatureCount,
   } = useContacts();
   const [selectedDDD, setSelectedDDD] = useState<string | null>(null);
+  const [selectedTemperatures, setSelectedTemperatures] = useState<Set<ContactTemperature>>(
+    new Set(['frio', 'morno', 'quente'] as ContactTemperature[])
+  );
   const [copiedBatch, setCopiedBatch] = useState(false);
   const [copyMode, setCopyMode] = useState<'phones' | 'formatted'>('phones');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -41,9 +46,28 @@ export default function Home() {
   const contactedCount = useMemo(() => getContactedCount(), [contacts]);
 
   const filteredContacts = useMemo(() => {
-    if (!selectedDDD) return contacts;
-    return contacts.filter(c => c.ddd === selectedDDD);
-  }, [contacts, selectedDDD]);
+    let filtered = contacts;
+    
+    // Filtro por DDD
+    if (selectedDDD) {
+      filtered = filtered.filter(c => c.ddd === selectedDDD);
+    }
+    
+    // Filtro por Temperatura
+    filtered = filtered.filter(c => selectedTemperatures.has(c.temperature));
+    
+    return filtered;
+  }, [contacts, selectedDDD, selectedTemperatures]);
+
+  const toggleTemperatureFilter = (temp: ContactTemperature) => {
+    const newSet = new Set(selectedTemperatures);
+    if (newSet.has(temp)) {
+      newSet.delete(temp);
+    } else {
+      newSet.add(temp);
+    }
+    setSelectedTemperatures(newSet);
+  };
 
   const handleCopyBatch = async () => {
     if (selectedIds.size === 0) {
@@ -121,7 +145,7 @@ export default function Home() {
           </div>
 
           {/* Estatísticas */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <div className="bg-secondary p-3 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">Contatos Realizados</p>
               <p className="text-xl font-bold text-accent">{contactedCount}</p>
@@ -130,7 +154,11 @@ export default function Home() {
               <p className="text-xs text-muted-foreground mb-1">Pendentes</p>
               <p className="text-xl font-bold text-primary">{contacts.length - contactedCount}</p>
             </div>
-            <div className="bg-secondary p-3 rounded-lg col-span-2 sm:col-span-1">
+            <div className="bg-secondary p-3 rounded-lg">
+              <p className="text-xs text-muted-foreground mb-1">Quentes</p>
+              <p className="text-xl font-bold text-red-600">{getTemperatureCount('quente')}</p>
+            </div>
+            <div className="bg-secondary p-3 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">Progresso</p>
               <p className="text-xl font-bold text-foreground">
                 {Math.round((contactedCount / contacts.length) * 100)}%
@@ -250,7 +278,7 @@ export default function Home() {
           )}
 
           {/* Filtro por DDD */}
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap mb-6">
             <Filter className="h-5 w-5 text-muted-foreground" />
             <span className="text-sm font-medium text-foreground">Filtrar por DDD:</span>
             <div className="flex flex-wrap gap-2">
@@ -278,6 +306,44 @@ export default function Home() {
               })}
             </div>
           </div>
+
+          {/* Filtro por Temperatura */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <Filter className="h-5 w-5 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">Filtrar por Classificação:</span>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => toggleTemperatureFilter('frio')}
+                className={`px-3 py-1 rounded text-xs font-medium border transition-all ${
+                  selectedTemperatures.has('frio')
+                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                    : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
+                }`}
+              >
+                Frio ({getTemperatureCount('frio')})
+              </button>
+              <button
+                onClick={() => toggleTemperatureFilter('morno')}
+                className={`px-3 py-1 rounded text-xs font-medium border transition-all ${
+                  selectedTemperatures.has('morno')
+                    ? 'bg-yellow-100 text-yellow-800 border-yellow-300'
+                    : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
+                }`}
+              >
+                Morno ({getTemperatureCount('morno')})
+              </button>
+              <button
+                onClick={() => toggleTemperatureFilter('quente')}
+                className={`px-3 py-1 rounded text-xs font-medium border transition-all ${
+                  selectedTemperatures.has('quente')
+                    ? 'bg-red-100 text-red-800 border-red-300'
+                    : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
+                }`}
+              >
+                Quente ({getTemperatureCount('quente')})
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -287,7 +353,7 @@ export default function Home() {
           <div className="text-center py-12">
             <Phone className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
             <p className="text-foreground font-medium">Nenhum contato encontrado</p>
-            <p className="text-sm text-muted-foreground">Tente alterar o filtro de DDD</p>
+            <p className="text-sm text-muted-foreground">Tente alterar os filtros de DDD ou Classificação</p>
           </div>
         ) : (
           <div className="bg-white">
@@ -300,6 +366,7 @@ export default function Home() {
                 onToggleSelected={toggleSelected}
                 onEditName={editName}
                 onDelete={deleteContact}
+                onSetTemperature={setTemperature}
               />
             ))}
           </div>

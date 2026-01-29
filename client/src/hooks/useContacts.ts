@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 
+export type ContactTemperature = 'frio' | 'morno' | 'quente';
+
 export interface Contact {
   id: string;
   name: string;
   phone: string;
   ddd: string;
   contacted: boolean;
+  temperature: ContactTemperature;
 }
 
 export function useContacts() {
@@ -47,6 +50,7 @@ export function useContacts() {
             phone: phone || '',
             ddd,
             contacted: false,
+            temperature: 'frio' as ContactTemperature,
           };
         });
         
@@ -153,9 +157,22 @@ export function useContacts() {
       phone: phone || '',
       ddd,
       contacted: false,
+      temperature: 'frio' as ContactTemperature,
     };
 
     setContacts(prev => [newContact, ...prev]);
+  };
+
+  const setTemperature = (id: string, temperature: ContactTemperature) => {
+    setContacts(prev =>
+      prev.map(contact =>
+        contact.id === id ? { ...contact, temperature } : contact
+      )
+    );
+  };
+
+  const getTemperatureCount = (temperature: ContactTemperature) => {
+    return contacts.filter(c => c.temperature === temperature).length;
   };
 
   return {
@@ -174,5 +191,7 @@ export function useContacts() {
     editName,
     deleteContact,
     addContact,
+    setTemperature,
+    getTemperatureCount,
   };
 }
