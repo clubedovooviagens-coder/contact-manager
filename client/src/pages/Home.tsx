@@ -68,7 +68,12 @@ export default function Home() {
     } else {
       newSet.add(temp);
     }
-    setSelectedTemperatures(newSet);
+    // Se nenhuma temperatura foi selecionada, selecionar todas
+    if (newSet.size === 0) {
+      setSelectedTemperatures(new Set(['frio', 'morno', 'quente'] as ContactTemperature[]));
+    } else {
+      setSelectedTemperatures(newSet);
+    }
   };
 
   const handleCopyBatch = async () => {
