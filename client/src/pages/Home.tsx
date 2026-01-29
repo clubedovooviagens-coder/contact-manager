@@ -57,7 +57,10 @@ export default function Home() {
       filtered = filtered.filter(c => c.ddd === selectedDDD);
     }
     
-    filtered = filtered.filter(c => selectedTemperatures.has(c.temperature));
+    // Apenas filtrar por temperatura se houver seleção (não filtrar se todas estão selecionadas)
+    if (selectedTemperatures.size > 0 && selectedTemperatures.size < 3) {
+      filtered = filtered.filter(c => selectedTemperatures.has(c.temperature));
+    }
     
     return filtered;
   }, [contacts, selectedDDD, selectedTemperatures]);
@@ -66,13 +69,15 @@ export default function Home() {
     const newSet = new Set(selectedTemperatures);
     if (newSet.has(temp)) {
       newSet.delete(temp);
+      // Se nenhuma temperatura foi selecionada, selecionar todas
+      if (newSet.size === 0) {
+        setSelectedTemperatures(new Set(['frio', 'morno', 'quente'] as ContactTemperature[]));
+      } else {
+        setSelectedTemperatures(newSet);
+      }
     } else {
+      // Quando adiciona uma temperatura, NÃO remove as outras
       newSet.add(temp);
-    }
-    // Se nenhuma temperatura foi selecionada, selecionar todas
-    if (newSet.size === 0) {
-      setSelectedTemperatures(new Set(['frio', 'morno', 'quente'] as ContactTemperature[]));
-    } else {
       setSelectedTemperatures(newSet);
     }
   };
