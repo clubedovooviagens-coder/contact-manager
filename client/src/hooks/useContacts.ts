@@ -25,8 +25,21 @@ export function useContacts() {
         const parsed: Contact[] = lines.map((line, index) => {
           const [name, phone] = line.split(';').map(s => s.trim());
           
-          // Extract DDD (first 2 digits of phone)
-          const ddd = phone && phone.length >= 2 ? phone.substring(0, 2) : 'XX';
+          // Extract DDD com logica aprimorada:
+          // - 11 digitos: DDD = primeiros 2 digitos
+          // - 13 digitos comecando com 55: DDD = digitos 3-4 (55 eh DDI)
+          // - Outros: primeiros 2 digitos ou XX
+          let ddd = 'XX';
+          if (phone) {
+            const digits = phone.replace(/\D/g, '');
+            if (digits.length === 11) {
+              ddd = digits.substring(0, 2);
+            } else if (digits.length === 13 && digits.startsWith('55')) {
+              ddd = digits.substring(2, 4);
+            } else if (digits.length >= 2) {
+              ddd = digits.substring(0, 2);
+            }
+          }
           
           return {
             id: `${index}-${name}`,
