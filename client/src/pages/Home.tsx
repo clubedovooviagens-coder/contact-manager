@@ -35,6 +35,7 @@ export default function Home() {
     setSelectedConsultor,
     setConsultorForContact,
     getWhatsAppLink,
+    resetAllContacts,
   } = useContacts();
   const [selectedDDD, setSelectedDDD] = useState<string | null>(null);
   const [selectedTemperatures, setSelectedTemperatures] = useState<Set<ContactTemperature>>(
@@ -207,8 +208,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* Botão de Adicionar */}
-        <div className="mb-3">
+        {/* Botões de Ação */}
+        <div className="mb-3 flex gap-2">
           <Button
             variant="default"
             size="sm"
@@ -216,6 +217,19 @@ export default function Home() {
             className="bg-green-600 hover:bg-green-700 text-xs md:text-sm"
           >
             + Adicionar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (window.confirm('Tem certeza que deseja resetar todos os contatos? Esta ação não pode ser desfeita.')) {
+                resetAllContacts();
+                toast.success('Contatos resetados com sucesso!');
+              }
+            }}
+            className="text-xs md:text-sm border-red-300 text-red-600 hover:bg-red-50"
+          >
+            🔄 Resetar
           </Button>
         </div>
 

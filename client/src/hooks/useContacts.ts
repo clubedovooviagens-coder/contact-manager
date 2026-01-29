@@ -267,6 +267,54 @@ export function useContacts() {
     return `https://wa.me/${phone}?text=${encodedMessage}`;
   };
 
+  const resetAllContacts = async () => {
+    // Limpar localStorage
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(CONSULTOR_KEY);
+    
+    // Resetar estado
+    setSelectedIds(new Set());
+    setSelectedConsultor('Ana Paula');
+    
+    // Recarregar do arquivo CSV
+    try {
+      const response = await fetch('/contacts.csv');
+      const text = await response.text();
+      
+      const lines = text.split('\n').filter(line => line.trim());
+      const parsed: Contact[] = lines.map((line, index) => {
+        const [name, phone] = line.split(';').map(s => s.trim());
+        
+        let ddd = 'XX';
+        if (phone) {
+          const digits = phone.replace(/\D/g, '');
+          if (digits.length === 11) {
+            ddd = digits.substring(0, 2);
+          } else if (digits.length === 13 && digits.startsWith('55')) {
+            ddd = digits.substring(2, 4);
+          } else if (digits.length >= 2) {
+            ddd = digits.substring(0, 2);
+          }
+        }
+        
+        return {
+          id: `${index}-${name}`,
+          name: name || 'Sem nome',
+          phone: phone || '',
+          ddd,
+          contacted: false,
+          temperature: 'frio' as ContactTemperature,
+          consultor: 'Ana Paula' as ConsultorName,
+        };
+      });
+      
+      setContacts(parsed);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    } catch (err) {
+      console.error('Erro ao resetar contatos:', err);
+    }
+  };
+
   return {
     contacts,
     loading,
@@ -290,5 +338,6 @@ export function useContacts() {
     setConsultorForContact,
     getWhatsAppMessage,
     getWhatsAppLink,
+    resetAllContacts,
   };
 }
