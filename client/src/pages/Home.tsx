@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import ContactRow from '@/components/ContactRow';
 import { useContacts } from '@/hooks/useContacts';
-import { Phone, Filter, AlertCircle, Copy, Trash2 } from 'lucide-react';
+import { Phone, Filter, AlertCircle, Copy, Trash2, User } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 
@@ -24,10 +24,12 @@ export default function Home() {
     toggleSelected,
     selectAll,
     getSelectedPhones,
+    getSelectedContactsFormatted,
     clearSelection,
   } = useContacts();
   const [selectedDDD, setSelectedDDD] = useState<string | null>(null);
   const [copiedBatch, setCopiedBatch] = useState(false);
+  const [copyMode, setCopyMode] = useState<'phones' | 'formatted'>('phones');
 
   const uniqueDDDs = useMemo(() => getUniqueDDDs(), [contacts]);
   const contactedCount = useMemo(() => getContactedCount(), [contacts]);
@@ -44,13 +46,18 @@ export default function Home() {
     }
 
     try {
-      const phones = getSelectedPhones();
-      await navigator.clipboard.writeText(phones);
+      const textToCopy = copyMode === 'formatted' 
+        ? getSelectedContactsFormatted()
+        : getSelectedPhones();
+      
+      await navigator.clipboard.writeText(textToCopy);
       setCopiedBatch(true);
-      toast.success(`${selectedIds.size} telefone(s) copiado(s) para a área de transferência`);
+      
+      const modeLabel = copyMode === 'formatted' ? 'contato(s)' : 'telefone(s)';
+      toast.success(`${selectedIds.size} ${modeLabel} copiado(s) para a área de transferência`);
       setTimeout(() => setCopiedBatch(false), 2000);
     } catch (err) {
-      toast.error('Erro ao copiar telefones');
+      toast.error('Erro ao copiar');
       console.error(err);
     }
   };
@@ -115,31 +122,56 @@ export default function Home() {
 
           {/* Seleção em Lote */}
           {selectedIds.size > 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <p className="text-sm font-medium text-foreground">
                   {selectedIds.size} contato(s) selecionado(s)
                 </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleCopyBatch}
-                  className={copiedBatch ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}
-                >
-                  <Copy className="h-4 w-4 mr-1" />
-                  Copiar em Lote
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clearSelection}
-                  className="border-blue-300"
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Limpar
-                </Button>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                  {/* Seletor de modo de cópia */}
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button
+                      variant={copyMode === 'phones' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setCopyMode('phones')}
+                      className={copyMode === 'phones' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-300'}
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      Telefones
+                    </Button>
+                    <Button
+                      variant={copyMode === 'formatted' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setCopyMode('formatted')}
+                      className={copyMode === 'formatted' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-300'}
+                    >
+                      <User className="h-4 w-4 mr-1" />
+                      Nome + Tel
+                    </Button>
+                  </div>
+                  
+                  {/* Botões de ação */}
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={handleCopyBatch}
+                      className={copiedBatch ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      Copiar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearSelection}
+                      className="border-blue-300"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Limpar
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           )}

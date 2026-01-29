@@ -92,6 +92,13 @@ export function useContacts() {
       .join('\n');
   };
 
+  const getSelectedContactsFormatted = () => {
+    return contacts
+      .filter(c => selectedIds.has(c.id))
+      .map(c => `${c.name} - ${c.phone}`)
+      .join('\n');
+  };
+
   const clearSelection = () => {
     setSelectedIds(new Set());
   };
@@ -107,6 +114,7 @@ export function useContacts() {
     toggleSelected,
     selectAll,
     getSelectedPhones,
+    getSelectedContactsFormatted,
     clearSelection,
   };
 }
