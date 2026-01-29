@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export type ContactTemperature = 'frio' | 'morno' | 'quente';
+export type ConsultorName = 'Ana Paula' | 'Júlia' | 'Joabh';
 
 export interface Contact {
   id: string;
@@ -9,17 +10,70 @@ export interface Contact {
   ddd: string;
   contacted: boolean;
   temperature: ContactTemperature;
+  consultor?: ConsultorName;
 }
+
+const STORAGE_KEY = 'contacts_data';
+const CONSULTOR_KEY = 'selected_consultor';
 
 export function useContacts() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedConsultor, setSelectedConsultor] = useState<ConsultorName>('Ana Paula');
+  
+  // Usar refs para rastrear se já foi inicializado
+  const isInitialized = useRef(false);
 
+  // Sincronização entre abas (apenas para mudanças externas)
   useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      // Apenas atualizar se a mudança veio de outra aba
+      if (event.key === STORAGE_KEY && event.newValue) {
+        try {
+          setContacts(JSON.parse(event.newValue));
+        } catch (err) {
+          console.error('Erro ao carregar contatos do localStorage:', err);
+        }
+      }
+      
+      if (event.key === CONSULTOR_KEY && event.newValue) {
+        setSelectedConsultor(event.newValue as ConsultorName);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Carregar contatos inicialmente (apenas uma vez)
+  useEffect(() => {
+    if (isInitialized.current) return;
+    isInitialized.current = true;
+
     const loadContacts = async () => {
       try {
+        // Tentar carregar do localStorage primeiro
+        const savedContacts = localStorage.getItem(STORAGE_KEY);
+        const savedConsultor = localStorage.getItem(CONSULTOR_KEY);
+        
+        if (savedContacts) {
+          try {
+            setContacts(JSON.parse(savedContacts));
+          } catch (err) {
+            console.error('Erro ao parsear contatos:', err);
+          }
+          
+          if (savedConsultor) {
+            setSelectedConsultor(savedConsultor as ConsultorName);
+          }
+          setError(null);
+          setLoading(false);
+          return;
+        }
+
+        // Se não houver dados salvos, carregar do CSV
         const response = await fetch('/contacts.csv');
         const text = await response.text();
         
@@ -51,10 +105,12 @@ export function useContacts() {
             ddd,
             contacted: false,
             temperature: 'frio' as ContactTemperature,
+            consultor: 'Ana Paula' as ConsultorName,
           };
         });
         
         setContacts(parsed);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
         setError(null);
       } catch (err) {
         setError('Erro ao carregar contatos');
@@ -66,6 +122,20 @@ export function useContacts() {
 
     loadContacts();
   }, []);
+
+  // Salvar contatos no localStorage sempre que mudarem
+  useEffect(() => {
+    if (contacts.length > 0 && isInitialized.current) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts));
+    }
+  }, [contacts]);
+
+  // Salvar consultor no localStorage
+  useEffect(() => {
+    if (isInitialized.current) {
+      localStorage.setItem(CONSULTOR_KEY, selectedConsultor);
+    }
+  }, [selectedConsultor]);
 
   const toggleContacted = (id: string) => {
     setContacts(prev =>
@@ -158,6 +228,7 @@ export function useContacts() {
       ddd,
       contacted: false,
       temperature: 'frio' as ContactTemperature,
+      consultor: selectedConsultor,
     };
 
     setContacts(prev => [newContact, ...prev]);
@@ -173,6 +244,27 @@ export function useContacts() {
 
   const getTemperatureCount = (temperature: ContactTemperature) => {
     return contacts.filter(c => c.temperature === temperature).length;
+  };
+
+  const setConsultorForContact = (id: string, consultor: ConsultorName) => {
+    setContacts(prev =>
+      prev.map(contact =>
+        contact.id === id ? { ...contact, consultor } : contact
+      )
+    );
+  };
+
+  const getWhatsAppMessage = (contact: Contact, consultor: ConsultorName) => {
+    const emoji = '😊';
+    const baseMessage = `Olá, ${contact.name}! Tudo bem? Sou ${consultor}, Consultor de Viagens do Clube do Voo Viagens, e vim te contar uma super novidade! ${emoji}`;
+    return baseMessage;
+  };
+
+  const getWhatsAppLink = (contact: Contact, consultor: ConsultorName) => {
+    const message = getWhatsAppMessage(contact, consultor);
+    const phone = contact.phone.replace(/\D/g, '');
+    const encodedMessage = encodeURIComponent(message);
+    return `https://wa.me/${phone}?text=${encodedMessage}`;
   };
 
   return {
@@ -193,5 +285,10 @@ export function useContacts() {
     addContact,
     setTemperature,
     getTemperatureCount,
+    selectedConsultor,
+    setSelectedConsultor,
+    setConsultorForContact,
+    getWhatsAppMessage,
+    getWhatsAppLink,
   };
 }

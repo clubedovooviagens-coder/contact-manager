@@ -31,6 +31,10 @@ export default function Home() {
     addContact,
     setTemperature,
     getTemperatureCount,
+    selectedConsultor,
+    setSelectedConsultor,
+    setConsultorForContact,
+    getWhatsAppLink,
   } = useContacts();
   const [selectedDDD, setSelectedDDD] = useState<string | null>(null);
   const [selectedTemperatures, setSelectedTemperatures] = useState<Set<ContactTemperature>>(
@@ -367,6 +371,8 @@ export default function Home() {
                 onEditName={editName}
                 onDelete={deleteContact}
                 onSetTemperature={setTemperature}
+                onSetConsultor={setConsultorForContact}
+                getWhatsAppLink={getWhatsAppLink}
               />
             ))}
           </div>

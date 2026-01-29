@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Contact, ContactTemperature } from '@/hooks/useContacts';
-import { Copy, Check, Edit2, Save, X, Trash2 } from 'lucide-react';
+import { Contact, ContactTemperature, ConsultorName } from '@/hooks/useContacts';
+import { Copy, Check, Edit2, Save, X, Trash2, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -13,6 +13,8 @@ interface ContactRowProps {
   onEditName: (id: string, newName: string) => void;
   onDelete: (id: string) => void;
   onSetTemperature: (id: string, temperature: ContactTemperature) => void;
+  onSetConsultor: (id: string, consultor: ConsultorName) => void;
+  getWhatsAppLink: (contact: Contact, consultor: ConsultorName) => string;
 }
 
 export default function ContactRow({
@@ -23,6 +25,8 @@ export default function ContactRow({
   onEditName,
   onDelete,
   onSetTemperature,
+  onSetConsultor,
+  getWhatsAppLink,
 }: ContactRowProps) {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -93,9 +97,15 @@ export default function ContactRow({
     }
   };
 
+  const handleWhatsApp = () => {
+    const consultor = contact.consultor || 'Ana Paula';
+    const link = getWhatsAppLink(contact, consultor);
+    window.open(link, '_blank');
+  };
+
   return (
     <div
-      className={`flex items-center justify-between gap-4 p-4 border-b border-border transition-colors ${
+      className={`flex items-center justify-between gap-3 p-4 border-b border-border transition-colors ${
         isSelected ? 'bg-blue-50' : contact.contacted ? 'bg-green-50' : 'hover:bg-secondary'
       }`}
     >
@@ -108,8 +118,8 @@ export default function ContactRow({
 
       {/* Nome e DDD */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-3">
-          <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0">
             {isEditing ? (
               <div className="flex items-center gap-2">
                 <input
@@ -165,8 +175,20 @@ export default function ContactRow({
 
       {/* Telefone */}
       <div className="hidden sm:block">
-        <p className="text-sm text-muted-foreground font-mono">{contact.phone}</p>
+        <p className="text-sm text-muted-foreground font-mono whitespace-nowrap">{contact.phone}</p>
       </div>
+
+      {/* Seletor de Consultor */}
+      <select
+        value={contact.consultor || 'Ana Paula'}
+        onChange={(e) => onSetConsultor(contact.id, e.target.value as ConsultorName)}
+        className="px-2 py-1 rounded text-xs border border-gray-300 bg-white text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+        title="Selecionar consultor"
+      >
+        <option value="Ana Paula">Ana Paula</option>
+        <option value="Júlia">Júlia</option>
+        <option value="Joabh">Joabh</option>
+      </select>
 
       {/* Classificação de Temperatura */}
       <div className="flex items-center gap-1">
@@ -187,20 +209,29 @@ export default function ContactRow({
       </div>
 
       {/* Botões de Ação */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleWhatsApp}
+          title="Enviar mensagem no WhatsApp"
+          className="p-1 h-auto"
+        >
+          <MessageCircle className="h-4 w-4 text-green-600" />
+        </Button>
+
         <Button
           variant="outline"
           size="sm"
           onClick={handleCopyPhone}
           title="Copiar telefone"
-          className={copied ? 'bg-blue-50 border-blue-300' : ''}
+          className={`p-1 h-auto ${copied ? 'bg-blue-50 border-blue-300' : ''}`}
         >
           {copied ? (
             <Check className="h-4 w-4 text-green-600" />
           ) : (
             <Copy className="h-4 w-4 text-blue-600" />
           )}
-          <span className="hidden sm:inline ml-1 text-xs">Copiar</span>
         </Button>
 
         <Button
@@ -208,16 +239,23 @@ export default function ContactRow({
           size="sm"
           onClick={handleToggleContacted}
           title={contact.contacted ? 'Desmarcar contato' : 'Marcar como contato feito'}
-          className={
+          className={`p-1 h-auto ${
             contact.contacted
               ? 'bg-green-600 hover:bg-green-700 border-green-600'
               : 'border-gray-300'
-          }
+          }`}
         >
           <Check className="h-4 w-4" />
-          <span className="hidden sm:inline ml-1 text-xs">
-            {contact.contacted ? 'Feito' : 'Marcar'}
-          </span>
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleDelete}
+          title="Deletar contato"
+          className="p-1 h-auto"
+        >
+          <Trash2 className="h-4 w-4 text-red-600" />
         </Button>
       </div>
     </div>
