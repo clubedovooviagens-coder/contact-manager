@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Contact } from '@/hooks/useContacts';
 import { Copy, Check } from 'lucide-react';
 import { useState } from 'react';
@@ -7,9 +8,16 @@ import { toast } from 'sonner';
 interface ContactRowProps {
   contact: Contact;
   onToggleContacted: (id: string) => void;
+  isSelected: boolean;
+  onToggleSelected: (id: string) => void;
 }
 
-export default function ContactRow({ contact, onToggleContacted }: ContactRowProps) {
+export default function ContactRow({
+  contact,
+  onToggleContacted,
+  isSelected,
+  onToggleSelected,
+}: ContactRowProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopyPhone = async () => {
@@ -36,9 +44,16 @@ export default function ContactRow({ contact, onToggleContacted }: ContactRowPro
   return (
     <div
       className={`flex items-center justify-between gap-4 p-4 border-b border-border transition-colors ${
-        contact.contacted ? 'bg-green-50' : 'hover:bg-secondary'
+        isSelected ? 'bg-blue-50' : contact.contacted ? 'bg-green-50' : 'hover:bg-secondary'
       }`}
     >
+      {/* Checkbox */}
+      <Checkbox
+        checked={isSelected}
+        onCheckedChange={() => onToggleSelected(contact.id)}
+        className="h-5 w-5"
+      />
+
       {/* Nome e DDD */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-3">

@@ -1,8 +1,9 @@
 import { Button } from '@/components/ui/button';
 import ContactRow from '@/components/ContactRow';
 import { useContacts } from '@/hooks/useContacts';
-import { Phone, Filter, AlertCircle } from 'lucide-react';
+import { Phone, Filter, AlertCircle, Copy, Trash2 } from 'lucide-react';
 import { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 
 /**
  * Design: Minimalismo com Foco em Produtividade
@@ -12,9 +13,21 @@ import { useState, useMemo } from 'react';
  * - Animações: Suaves, feedback imediato
  */
 export default function Home() {
-  const { contacts, loading, error, toggleContacted, getUniqueDDDs, getContactedCount } =
-    useContacts();
+  const {
+    contacts,
+    loading,
+    error,
+    toggleContacted,
+    getUniqueDDDs,
+    getContactedCount,
+    selectedIds,
+    toggleSelected,
+    selectAll,
+    getSelectedPhones,
+    clearSelection,
+  } = useContacts();
   const [selectedDDD, setSelectedDDD] = useState<string | null>(null);
+  const [copiedBatch, setCopiedBatch] = useState(false);
 
   const uniqueDDDs = useMemo(() => getUniqueDDDs(), [contacts]);
   const contactedCount = useMemo(() => getContactedCount(), [contacts]);
@@ -23,6 +36,24 @@ export default function Home() {
     if (!selectedDDD) return contacts;
     return contacts.filter(c => c.ddd === selectedDDD);
   }, [contacts, selectedDDD]);
+
+  const handleCopyBatch = async () => {
+    if (selectedIds.size === 0) {
+      toast.error('Selecione pelo menos um contato');
+      return;
+    }
+
+    try {
+      const phones = getSelectedPhones();
+      await navigator.clipboard.writeText(phones);
+      setCopiedBatch(true);
+      toast.success(`${selectedIds.size} telefone(s) copiado(s) para a área de transferência`);
+      setTimeout(() => setCopiedBatch(false), 2000);
+    } catch (err) {
+      toast.error('Erro ao copiar telefones');
+      console.error(err);
+    }
+  };
 
   if (loading) {
     return (
@@ -82,6 +113,37 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Seleção em Lote */}
+          {selectedIds.size > 0 && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <p className="text-sm font-medium text-foreground">
+                  {selectedIds.size} contato(s) selecionado(s)
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleCopyBatch}
+                  className={copiedBatch ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}
+                >
+                  <Copy className="h-4 w-4 mr-1" />
+                  Copiar em Lote
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearSelection}
+                  className="border-blue-300"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Limpar
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Filtro por DDD */}
           <div className="flex items-center gap-3 flex-wrap">
             <Filter className="h-5 w-5 text-muted-foreground" />
@@ -129,6 +191,8 @@ export default function Home() {
                 key={contact.id}
                 contact={contact}
                 onToggleContacted={toggleContacted}
+                isSelected={selectedIds.has(contact.id)}
+                onToggleSelected={toggleSelected}
               />
             ))}
           </div>

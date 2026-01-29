@@ -12,6 +12,7 @@ export function useContacts() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const loadContacts = async () => {
@@ -66,6 +67,35 @@ export function useContacts() {
     return contacts.filter(c => c.contacted).length;
   };
 
+  const toggleSelected = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const selectAll = () => {
+    if (selectedIds.size === contacts.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(contacts.map(c => c.id)));
+    }
+  };
+
+  const getSelectedPhones = () => {
+    return contacts
+      .filter(c => selectedIds.has(c.id))
+      .map(c => c.phone)
+      .join('\n');
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+  };
+
   return {
     contacts,
     loading,
@@ -73,5 +103,10 @@ export function useContacts() {
     toggleContacted,
     getUniqueDDDs,
     getContactedCount,
+    selectedIds,
+    toggleSelected,
+    selectAll,
+    getSelectedPhones,
+    clearSelection,
   };
 }
