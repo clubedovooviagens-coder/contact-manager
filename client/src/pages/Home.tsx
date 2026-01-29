@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import ContactRow from '@/components/ContactRow';
 import { useContacts, ContactTemperature } from '@/hooks/useContacts';
-import { Phone, Filter, AlertCircle, Copy, Trash2, User } from 'lucide-react';
+import { Phone, Filter, AlertCircle, Copy, Trash2, User, ChevronDown } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 
@@ -11,6 +11,7 @@ import { toast } from 'sonner';
  * - Cores: Branco, Azul (#2563eb), Verde (#10b981), Cinza (#f3f4f6)
  * - Layout: Tabela vertical com cards compactos, filtro fixo no topo
  * - Animações: Suaves, feedback imediato
+ * - Mobile: Layout responsivo com compactação de elementos
  */
 export default function Home() {
   const {
@@ -45,6 +46,7 @@ export default function Home() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
+  const [showStats, setShowStats] = useState(true);
 
   const uniqueDDDs = useMemo(() => getUniqueDDDs(), [contacts]);
   const contactedCount = useMemo(() => getContactedCount(), [contacts]);
@@ -134,90 +136,105 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {/* Header - Compactado */}
       <header className="bg-white border-b border-border sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Phone className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl font-bold text-foreground">Gerenciador de Contatos</h1>
+        <div className="max-w-7xl mx-auto px-3 md:px-4 py-3 md:py-4">
+          {/* Título e Total */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Phone className="h-6 md:h-8 w-6 md:w-8 text-primary flex-shrink-0" />
+              <h1 className="text-xl md:text-3xl font-bold text-foreground truncate">Gerenciador de Contatos</h1>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">Total de contatos</p>
-              <p className="text-2xl font-bold text-primary">{contacts.length}</p>
+            <div className="text-right flex-shrink-0">
+              <p className="text-xs md:text-sm text-muted-foreground">Total</p>
+              <p className="text-lg md:text-2xl font-bold text-primary">{contacts.length}</p>
             </div>
           </div>
 
-          {/* Estatísticas */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            <div className="bg-secondary p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">Contatos Realizados</p>
-              <p className="text-xl font-bold text-accent">{contactedCount}</p>
-            </div>
-            <div className="bg-secondary p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">Pendentes</p>
-              <p className="text-xl font-bold text-primary">{contacts.length - contactedCount}</p>
-            </div>
-            <div className="bg-secondary p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">Quentes</p>
-              <p className="text-xl font-bold text-red-600">{getTemperatureCount('quente')}</p>
-            </div>
-            <div className="bg-secondary p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">Progresso</p>
-              <p className="text-xl font-bold text-foreground">
-                {Math.round((contactedCount / contacts.length) * 100)}%
-              </p>
-            </div>
+          {/* Estatísticas - Colapsível em Mobile */}
+          <div className="mb-3">
+            <button
+              onClick={() => setShowStats(!showStats)}
+              className="md:hidden flex items-center gap-2 text-sm font-medium text-foreground mb-2"
+            >
+              <ChevronDown className={`h-4 w-4 transition-transform ${showStats ? 'rotate-180' : ''}`} />
+              Estatísticas
+            </button>
+            
+            {(showStats || window.innerWidth >= 768) && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+                <div className="bg-secondary p-2 md:p-3 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-0.5">Realizados</p>
+                  <p className="text-lg md:text-xl font-bold text-accent">{contactedCount}</p>
+                </div>
+                <div className="bg-secondary p-2 md:p-3 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-0.5">Pendentes</p>
+                  <p className="text-lg md:text-xl font-bold text-primary">{contacts.length - contactedCount}</p>
+                </div>
+                <div className="bg-secondary p-2 md:p-3 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-0.5">Quentes</p>
+                  <p className="text-lg md:text-xl font-bold text-red-600">{getTemperatureCount('quente')}</p>
+                </div>
+                <div className="bg-secondary p-2 md:p-3 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-0.5">Progresso</p>
+                  <p className="text-lg md:text-xl font-bold text-foreground">
+                    {Math.round((contactedCount / contacts.length) * 100)}%
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Seleção em Lote */}
           {selectedIds.size > 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <p className="text-sm font-medium text-foreground">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 mb-3">
+              <div className="flex flex-col gap-3">
+                <p className="text-xs md:text-sm font-medium text-foreground">
                   {selectedIds.size} contato(s) selecionado(s)
                 </p>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                <div className="flex flex-col gap-2">
                   {/* Seletor de modo de cópia */}
-                  <div className="flex gap-2 w-full sm:w-auto">
+                  <div className="flex gap-2">
                     <Button
                       variant={copyMode === 'phones' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setCopyMode('phones')}
-                      className={copyMode === 'phones' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-300'}
+                      className={`text-xs md:text-sm ${copyMode === 'phones' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-300'}`}
                     >
-                      <Copy className="h-4 w-4 mr-1" />
-                      Telefones
+                      <Copy className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                      <span className="hidden sm:inline">Telefones</span>
+                      <span className="sm:hidden">Tel</span>
                     </Button>
                     <Button
                       variant={copyMode === 'formatted' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setCopyMode('formatted')}
-                      className={copyMode === 'formatted' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-300'}
+                      className={`text-xs md:text-sm ${copyMode === 'formatted' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-300'}`}
                     >
-                      <User className="h-4 w-4 mr-1" />
-                      Nome + Tel
+                      <User className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                      <span className="hidden sm:inline">Nome + Tel</span>
+                      <span className="sm:hidden">Nome</span>
                     </Button>
                   </div>
                   
                   {/* Botões de ação */}
-                  <div className="flex gap-2 w-full sm:w-auto">
+                  <div className="flex gap-2">
                     <Button
                       variant="default"
                       size="sm"
                       onClick={handleCopyBatch}
-                      className={copiedBatch ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}
+                      className={`flex-1 text-xs md:text-sm ${copiedBatch ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}`}
                     >
-                      <Copy className="h-4 w-4 mr-1" />
+                      <Copy className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                       Copiar
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={clearSelection}
-                      className="border-blue-300"
+                      className="flex-1 text-xs md:text-sm border-blue-300"
                     >
-                      <Trash2 className="h-4 w-4 mr-1" />
+                      <Trash2 className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                       Limpar
                     </Button>
                   </div>
@@ -227,12 +244,12 @@ export default function Home() {
           )}
 
           {/* Botão de Adicionar Contato */}
-          <div className="mb-6">
+          <div className="mb-3">
             <Button
               variant="default"
               size="sm"
               onClick={() => setShowAddForm(!showAddForm)}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 text-xs md:text-sm"
             >
               + Adicionar Contato
             </Button>
@@ -240,8 +257,8 @@ export default function Home() {
 
           {/* Formulário de Adicionar Contato */}
           {showAddForm && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <div className="flex flex-col gap-3">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 md:p-4 mb-3">
+              <div className="flex flex-col gap-2">
                 <input
                   type="text"
                   placeholder="Nome do contato"
@@ -250,8 +267,8 @@ export default function Home() {
                   className="px-3 py-2 border border-green-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
                 <input
-                  type="text"
-                  placeholder="Telefone (ex: 5511999999999)"
+                  type="tel"
+                  placeholder="Telefone"
                   value={newPhone}
                   onChange={(e) => setNewPhone(e.target.value)}
                   className="px-3 py-2 border border-green-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -261,18 +278,15 @@ export default function Home() {
                     variant="default"
                     size="sm"
                     onClick={handleAddContact}
-                    className="bg-green-600 hover:bg-green-700"
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-xs md:text-sm"
                   >
                     Adicionar
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      setShowAddForm(false);
-                      setNewName('');
-                      setNewPhone('');
-                    }}
+                    onClick={() => setShowAddForm(false)}
+                    className="flex-1 text-xs md:text-sm"
                   >
                     Cancelar
                   </Button>
@@ -281,110 +295,100 @@ export default function Home() {
             </div>
           )}
 
-          {/* Filtro por DDD */}
-          <div className="flex items-center gap-3 flex-wrap mb-6">
-            <Filter className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">Filtrar por DDD:</span>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={selectedDDD === null ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedDDD(null)}
-                className="text-xs"
-              >
-                Todos ({contacts.length})
-              </Button>
-              {uniqueDDDs.map(ddd => {
-                const count = contacts.filter(c => c.ddd === ddd).length;
-                return (
-                  <Button
-                    key={ddd}
-                    variant={selectedDDD === ddd ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedDDD(ddd)}
-                    className="text-xs"
-                  >
-                    {ddd} ({count})
-                  </Button>
-                );
-              })}
+          {/* Filtros */}
+          <div className="space-y-2 md:space-y-3">
+            {/* Filtro por DDD */}
+            <div>
+              <p className="text-xs md:text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                <Filter className="h-4 w-4" /> Filtrar por DDD:
+              </p>
+              <div className="flex flex-wrap gap-1 md:gap-2">
+                <Button
+                  variant={selectedDDD === null ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedDDD(null)}
+                  className={`text-xs md:text-sm ${selectedDDD === null ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                >
+                  Todos ({contacts.length})
+                </Button>
+                {uniqueDDDs.map(ddd => {
+                  const count = contacts.filter(c => c.ddd === ddd).length;
+                  return (
+                    <Button
+                      key={ddd}
+                      variant={selectedDDD === ddd ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSelectedDDD(ddd)}
+                      className={`text-xs md:text-sm ${selectedDDD === ddd ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                    >
+                      {ddd} ({count})
+                    </Button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          {/* Filtro por Temperatura */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <Filter className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">Filtrar por Classificação:</span>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => toggleTemperatureFilter('frio')}
-                className={`px-3 py-1 rounded text-xs font-medium border transition-all ${
-                  selectedTemperatures.has('frio')
-                    ? 'bg-blue-100 text-blue-800 border-blue-300'
-                    : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
-                }`}
-              >
-                Frio ({getTemperatureCount('frio')})
-              </button>
-              <button
-                onClick={() => toggleTemperatureFilter('morno')}
-                className={`px-3 py-1 rounded text-xs font-medium border transition-all ${
-                  selectedTemperatures.has('morno')
-                    ? 'bg-yellow-100 text-yellow-800 border-yellow-300'
-                    : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
-                }`}
-              >
-                Morno ({getTemperatureCount('morno')})
-              </button>
-              <button
-                onClick={() => toggleTemperatureFilter('quente')}
-                className={`px-3 py-1 rounded text-xs font-medium border transition-all ${
-                  selectedTemperatures.has('quente')
-                    ? 'bg-red-100 text-red-800 border-red-300'
-                    : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
-                }`}
-              >
-                Quente ({getTemperatureCount('quente')})
-              </button>
+            {/* Filtro por Classificação */}
+            <div>
+              <p className="text-xs md:text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                <Filter className="h-4 w-4" /> Filtrar por Classificação:
+              </p>
+              <div className="flex flex-wrap gap-1 md:gap-2">
+                <Button
+                  variant={selectedTemperatures.has('frio') ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => toggleTemperatureFilter('frio')}
+                  className={`text-xs md:text-sm ${selectedTemperatures.has('frio') ? 'bg-blue-400 hover:bg-blue-500' : ''}`}
+                >
+                  Frio ({getTemperatureCount('frio')})
+                </Button>
+                <Button
+                  variant={selectedTemperatures.has('morno') ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => toggleTemperatureFilter('morno')}
+                  className={`text-xs md:text-sm ${selectedTemperatures.has('morno') ? 'bg-yellow-400 hover:bg-yellow-500' : ''}`}
+                >
+                  Morno ({getTemperatureCount('morno')})
+                </Button>
+                <Button
+                  variant={selectedTemperatures.has('quente') ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => toggleTemperatureFilter('quente')}
+                  className={`text-xs md:text-sm ${selectedTemperatures.has('quente') ? 'bg-red-500 hover:bg-red-600' : ''}`}
+                >
+                  Quente ({getTemperatureCount('quente')})
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       {/* Lista de Contatos */}
-      <main className="max-w-7xl mx-auto">
+      <main className="max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-6">
         {filteredContacts.length === 0 ? (
-          <div className="text-center py-12">
-            <Phone className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <p className="text-foreground font-medium">Nenhum contato encontrado</p>
-            <p className="text-sm text-muted-foreground">Tente alterar os filtros de DDD ou Classificação</p>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Nenhum contato encontrado com os filtros selecionados</p>
           </div>
         ) : (
-          <div className="bg-white">
+          <div className="space-y-2 md:space-y-3">
             {filteredContacts.map(contact => (
               <ContactRow
                 key={contact.id}
                 contact={contact}
-                onToggleContacted={toggleContacted}
+                onToggleContacted={() => toggleContacted(contact.id)}
+                onToggleSelected={() => toggleSelected(contact.id)}
                 isSelected={selectedIds.has(contact.id)}
-                onToggleSelected={toggleSelected}
-                onEditName={editName}
-                onDelete={deleteContact}
-                onSetTemperature={setTemperature}
-                onSetConsultor={setConsultorForContact}
-                getWhatsAppLink={getWhatsAppLink}
+                onEditName={(newName) => editName(contact.id, newName)}
+                onDelete={() => deleteContact(contact.id)}
+                onSetTemperature={(temp) => setTemperature(contact.id, temp as ContactTemperature)}
+                onSetConsultor={(consultor) => setConsultorForContact(contact.id, consultor as any)}
+                getWhatsAppLink={() => getWhatsAppLink(contact, (contact.consultor as any) || 'Ana Paula')}
               />
             ))}
           </div>
         )}
       </main>
-
-      {/* Footer */}
-      <footer className="bg-secondary border-t border-border mt-12 py-6">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>Gerenciador de Contatos • {new Date().getFullYear()}</p>
-        </div>
-      </footer>
     </div>
   );
 }
