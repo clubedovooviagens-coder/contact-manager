@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Contact } from '@/hooks/useContacts';
-import { Copy, Check, Edit2, Save, X } from 'lucide-react';
+import { Copy, Check, Edit2, Save, X, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -11,6 +11,7 @@ interface ContactRowProps {
   isSelected: boolean;
   onToggleSelected: (id: string) => void;
   onEditName: (id: string, newName: string) => void;
+  onDelete: (id: string) => void;
 }
 
 export default function ContactRow({
@@ -19,6 +20,7 @@ export default function ContactRow({
   isSelected,
   onToggleSelected,
   onEditName,
+  onDelete,
 }: ContactRowProps) {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -58,6 +60,13 @@ export default function ContactRow({
   const handleCancelEdit = () => {
     setEditedName(contact.name);
     setIsEditing(false);
+  };
+
+  const handleDelete = () => {
+    if (window.confirm(`Tem certeza que deseja deletar ${contact.name}?`)) {
+      onDelete(contact.id);
+      toast.success(`Contato deletado: ${contact.name}`);
+    }
   };
 
   return (

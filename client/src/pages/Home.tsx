@@ -27,10 +27,15 @@ export default function Home() {
     getSelectedContactsFormatted,
     clearSelection,
     editName,
+    deleteContact,
+    addContact,
   } = useContacts();
   const [selectedDDD, setSelectedDDD] = useState<string | null>(null);
   const [copiedBatch, setCopiedBatch] = useState(false);
   const [copyMode, setCopyMode] = useState<'phones' | 'formatted'>('phones');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
 
   const uniqueDDDs = useMemo(() => getUniqueDDDs(), [contacts]);
   const contactedCount = useMemo(() => getContactedCount(), [contacts]);
@@ -61,6 +66,18 @@ export default function Home() {
       toast.error('Erro ao copiar');
       console.error(err);
     }
+  };
+
+  const handleAddContact = () => {
+    if (!newName.trim() || !newPhone.trim()) {
+      toast.error('Preencha nome e telefone');
+      return;
+    }
+    addContact(newName.trim(), newPhone.trim());
+    toast.success(`Contato adicionado: ${newName}`);
+    setNewName('');
+    setNewPhone('');
+    setShowAddForm(false);
   };
 
   if (loading) {
@@ -177,6 +194,61 @@ export default function Home() {
             </div>
           )}
 
+          {/* Botão de Adicionar Contato */}
+          <div className="mb-6">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              + Adicionar Contato
+            </Button>
+          </div>
+
+          {/* Formulário de Adicionar Contato */}
+          {showAddForm && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <div className="flex flex-col gap-3">
+                <input
+                  type="text"
+                  placeholder="Nome do contato"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="px-3 py-2 border border-green-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+                <input
+                  type="text"
+                  placeholder="Telefone (ex: 5511999999999)"
+                  value={newPhone}
+                  onChange={(e) => setNewPhone(e.target.value)}
+                  className="px-3 py-2 border border-green-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleAddContact}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    Adicionar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowAddForm(false);
+                      setNewName('');
+                      setNewPhone('');
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Filtro por DDD */}
           <div className="flex items-center gap-3 flex-wrap">
             <Filter className="h-5 w-5 text-muted-foreground" />
@@ -227,6 +299,7 @@ export default function Home() {
                 isSelected={selectedIds.has(contact.id)}
                 onToggleSelected={toggleSelected}
                 onEditName={editName}
+                onDelete={deleteContact}
               />
             ))}
           </div>

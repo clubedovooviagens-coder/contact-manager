@@ -124,6 +124,40 @@ export function useContacts() {
     );
   };
 
+  const deleteContact = (id: string) => {
+    setContacts(prev => prev.filter(contact => contact.id !== id));
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(id);
+      return newSet;
+    });
+  };
+
+  const addContact = (name: string, phone: string) => {
+    // Extract DDD using the same logic
+    let ddd = 'XX';
+    if (phone) {
+      const digits = phone.replace(/\D/g, '');
+      if (digits.length === 11) {
+        ddd = digits.substring(0, 2);
+      } else if (digits.length === 13 && digits.startsWith('55')) {
+        ddd = digits.substring(2, 4);
+      } else if (digits.length >= 2) {
+        ddd = digits.substring(0, 2);
+      }
+    }
+
+    const newContact: Contact = {
+      id: `${Date.now()}-${name}`,
+      name: name || 'Sem nome',
+      phone: phone || '',
+      ddd,
+      contacted: false,
+    };
+
+    setContacts(prev => [newContact, ...prev]);
+  };
+
   return {
     contacts,
     loading,
@@ -138,5 +172,7 @@ export function useContacts() {
     getSelectedContactsFormatted,
     clearSelection,
     editName,
+    deleteContact,
+    addContact,
   };
 }
