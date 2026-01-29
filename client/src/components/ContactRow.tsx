@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Contact } from '@/hooks/useContacts';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, Edit2, Save, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -10,6 +10,7 @@ interface ContactRowProps {
   onToggleContacted: (id: string) => void;
   isSelected: boolean;
   onToggleSelected: (id: string) => void;
+  onEditName: (id: string, newName: string) => void;
 }
 
 export default function ContactRow({
@@ -17,8 +18,11 @@ export default function ContactRow({
   onToggleContacted,
   isSelected,
   onToggleSelected,
+  onEditName,
 }: ContactRowProps) {
   const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedName, setEditedName] = useState(contact.name);
 
   const handleCopyPhone = async () => {
     try {
@@ -41,6 +45,21 @@ export default function ContactRow({
     }
   };
 
+  const handleSaveName = () => {
+    if (editedName.trim()) {
+      onEditName(contact.id, editedName.trim());
+      setIsEditing(false);
+      toast.success('Nome atualizado');
+    } else {
+      toast.error('Nome não pode estar vazio');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditedName(contact.name);
+    setIsEditing(false);
+  };
+
   return (
     <div
       className={`flex items-center justify-between gap-4 p-4 border-b border-border transition-colors ${
@@ -58,13 +77,52 @@ export default function ContactRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-3">
           <div className="flex-1">
-            <p
-              className={`font-medium text-foreground truncate ${
-                contact.contacted ? 'line-through text-muted-foreground' : ''
-              }`}
-            >
-              {contact.name}
-            </p>
+            {isEditing ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  className="flex-1 px-2 py-1 border border-blue-300 rounded text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveName();
+                    if (e.key === 'Escape') handleCancelEdit();
+                  }}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSaveName}
+                  className="p-1 h-auto"
+                  title="Salvar"
+                >
+                  <Save className="h-4 w-4 text-green-600" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCancelEdit}
+                  className="p-1 h-auto"
+                  title="Cancelar"
+                >
+                  <X className="h-4 w-4 text-red-600" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 group">
+                <p
+                  className={`font-medium text-foreground truncate cursor-pointer hover:text-blue-600 ${
+                    contact.contacted ? 'line-through text-muted-foreground' : ''
+                  }`}
+                  onClick={() => setIsEditing(true)}
+                  title="Clique para editar"
+                >
+                  {contact.name}
+                </p>
+                <Edit2 className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            )}
           </div>
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground whitespace-nowrap">
             DDD {contact.ddd}

@@ -26,6 +26,7 @@ export default function Home() {
     getSelectedPhones,
     getSelectedContactsFormatted,
     clearSelection,
+    editName,
   } = useContacts();
   const [selectedDDD, setSelectedDDD] = useState<string | null>(null);
   const [copiedBatch, setCopiedBatch] = useState(false);
@@ -225,6 +226,7 @@ export default function Home() {
                 onToggleContacted={toggleContacted}
                 isSelected={selectedIds.has(contact.id)}
                 onToggleSelected={toggleSelected}
+                onEditName={editName}
               />
             ))}
           </div>

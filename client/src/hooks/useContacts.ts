@@ -103,6 +103,14 @@ export function useContacts() {
     setSelectedIds(new Set());
   };
 
+  const editName = (id: string, newName: string) => {
+    setContacts(prev =>
+      prev.map(contact =>
+        contact.id === id ? { ...contact, name: newName } : contact
+      )
+    );
+  };
+
   return {
     contacts,
     loading,
@@ -116,5 +124,6 @@ export function useContacts() {
     getSelectedPhones,
     getSelectedContactsFormatted,
     clearSelection,
+    editName,
   };
 }
