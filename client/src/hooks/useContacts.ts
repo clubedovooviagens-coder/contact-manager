@@ -23,29 +23,8 @@ export function useContacts() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedConsultor, setSelectedConsultor] = useState<ConsultorName>('Ana Paula');
   
-  // Usar refs para rastrear se já foi inicializado
+  // Usar refs para rastrear se já foi inicializado (DEVE estar aqui, antes de useEffect)
   const isInitialized = useRef(false);
-
-  // Sincronização entre abas (apenas para mudanças externas)
-  useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      // Apenas atualizar se a mudança veio de outra aba
-      if (event.key === STORAGE_KEY && event.newValue) {
-        try {
-          setContacts(JSON.parse(event.newValue));
-        } catch (err) {
-          console.error('Erro ao carregar contatos do localStorage:', err);
-        }
-      }
-      
-      if (event.key === CONSULTOR_KEY && event.newValue) {
-        setSelectedConsultor(event.newValue as ConsultorName);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
 
   // Carregar contatos inicialmente (apenas uma vez)
   useEffect(() => {
@@ -121,6 +100,27 @@ export function useContacts() {
     };
 
     loadContacts();
+  }, []);
+
+  // Sincronização entre abas (apenas para mudanças externas)
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      // Apenas atualizar se a mudança veio de outra aba
+      if (event.key === STORAGE_KEY && event.newValue) {
+        try {
+          setContacts(JSON.parse(event.newValue));
+        } catch (err) {
+          console.error('Erro ao carregar contatos do localStorage:', err);
+        }
+      }
+      
+      if (event.key === CONSULTOR_KEY && event.newValue) {
+        setSelectedConsultor(event.newValue as ConsultorName);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // Salvar contatos no localStorage sempre que mudarem
