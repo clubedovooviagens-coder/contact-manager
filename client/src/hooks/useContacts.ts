@@ -22,7 +22,7 @@ export function useContacts() {
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedConsultor, setSelectedConsultor] = useState<ConsultorName>('Ana Paula');
-  
+
   // Usar refs para rastrear se já foi inicializado (DEVE estar aqui, antes de useEffect)
   const isInitialized = useRef(false);
 
@@ -36,14 +36,25 @@ export function useContacts() {
         // Tentar carregar do localStorage primeiro
         const savedContacts = localStorage.getItem(STORAGE_KEY);
         const savedConsultor = localStorage.getItem(CONSULTOR_KEY);
-        
+
         if (savedContacts) {
           try {
-            setContacts(JSON.parse(savedContacts));
+            const parsedContacts = JSON.parse(savedContacts) as Contact[];
+            // Normalizar contatos para garantir que todos tenham temperatura válida
+            const normalizedContacts = parsedContacts.map(contact => ({
+              ...contact,
+              temperature: (['frio', 'morno', 'quente'].includes(contact.temperature)
+                ? contact.temperature
+                : 'frio') as ContactTemperature,
+              consultor: contact.consultor || 'Ana Paula' as ConsultorName,
+            }));
+            setContacts(normalizedContacts);
+            // Salvar os contatos normalizados de volta
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedContacts));
           } catch (err) {
             console.error('Erro ao parsear contatos:', err);
           }
-          
+
           if (savedConsultor) {
             setSelectedConsultor(savedConsultor as ConsultorName);
           }
@@ -55,12 +66,12 @@ export function useContacts() {
         // Se não houver dados salvos, carregar do CSV
         const response = await fetch('/contacts.csv');
         const text = await response.text();
-        
+
         // Parse CSV
         const lines = text.split('\n').filter(line => line.trim());
         const parsed: Contact[] = lines.map((line, index) => {
           const [name, phone] = line.split(';').map(s => s.trim());
-          
+
           // Extract DDD com logica aprimorada:
           // - 11 digitos: DDD = primeiros 2 digitos
           // - 13 digitos comecando com 55: DDD = digitos 3-4 (55 eh DDI)
@@ -76,7 +87,7 @@ export function useContacts() {
               ddd = digits.substring(0, 2);
             }
           }
-          
+
           return {
             id: `${index}-${name}`,
             name: name || 'Sem nome',
@@ -87,7 +98,7 @@ export function useContacts() {
             consultor: 'Ana Paula' as ConsultorName,
           };
         });
-        
+
         setContacts(parsed);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
         setError(null);
@@ -113,7 +124,7 @@ export function useContacts() {
           console.error('Erro ao carregar contatos do localStorage:', err);
         }
       }
-      
+
       if (event.key === CONSULTOR_KEY && event.newValue) {
         setSelectedConsultor(event.newValue as ConsultorName);
       }
@@ -271,20 +282,20 @@ export function useContacts() {
     // Limpar localStorage
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(CONSULTOR_KEY);
-    
+
     // Resetar estado
     setSelectedIds(new Set());
     setSelectedConsultor('Ana Paula');
-    
+
     // Recarregar do arquivo CSV
     try {
       const response = await fetch('/contacts.csv');
       const text = await response.text();
-      
+
       const lines = text.split('\n').filter(line => line.trim());
       const parsed: Contact[] = lines.map((line, index) => {
         const [name, phone] = line.split(';').map(s => s.trim());
-        
+
         let ddd = 'XX';
         if (phone) {
           const digits = phone.replace(/\D/g, '');
@@ -296,7 +307,7 @@ export function useContacts() {
             ddd = digits.substring(0, 2);
           }
         }
-        
+
         return {
           id: `${index}-${name}`,
           name: name || 'Sem nome',
@@ -307,7 +318,7 @@ export function useContacts() {
           consultor: 'Ana Paula' as ConsultorName,
         };
       });
-      
+
       setContacts(parsed);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
     } catch (err) {

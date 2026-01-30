@@ -38,9 +38,7 @@ export default function Home() {
     resetAllContacts,
   } = useContacts();
   const [selectedDDD, setSelectedDDD] = useState<string | null>(null);
-  const [selectedTemperatures, setSelectedTemperatures] = useState<Set<ContactTemperature>>(
-    new Set(['frio', 'morno', 'quente'] as ContactTemperature[])
-  );
+  const [selectedTemperature, setSelectedTemperature] = useState<ContactTemperature | null>(null); // null = todas
   const [copiedBatch, setCopiedBatch] = useState(false);
   const [copyMode, setCopyMode] = useState<'phones' | 'formatted'>('phones');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -50,35 +48,45 @@ export default function Home() {
   const uniqueDDDs = useMemo(() => getUniqueDDDs(), [contacts]);
   const contactedCount = useMemo(() => getContactedCount(), [contacts]);
 
+  // Contadores por temperatura
+  const temperatureCounts = useMemo(() => ({
+    frio: contacts.filter(c => c.temperature === 'frio').length,
+    morno: contacts.filter(c => c.temperature === 'morno').length,
+    quente: contacts.filter(c => c.temperature === 'quente').length,
+  }), [contacts]);
+
   const filteredContacts = useMemo(() => {
     let filtered = contacts;
-    
+
     if (selectedDDD) {
       filtered = filtered.filter(c => c.ddd === selectedDDD);
     }
-    
-    // Apenas filtrar por temperatura se houver seleção (não filtrar se todas estão selecionadas)
-    if (selectedTemperatures.size > 0 && selectedTemperatures.size < 3) {
-      filtered = filtered.filter(c => selectedTemperatures.has(c.temperature));
-    }
-    
-    return filtered;
-  }, [contacts, selectedDDD, selectedTemperatures]);
 
-  const toggleTemperatureFilter = (temp: ContactTemperature) => {
-    const newSet = new Set(selectedTemperatures);
-    if (newSet.has(temp)) {
-      newSet.delete(temp);
-      // Se nenhuma temperatura foi selecionada, selecionar todas
-      if (newSet.size === 0) {
-        setSelectedTemperatures(new Set(['frio', 'morno', 'quente'] as ContactTemperature[]));
-      } else {
-        setSelectedTemperatures(newSet);
-      }
-    } else {
-      // Quando adiciona uma temperatura, NÃO remove as outras
-      newSet.add(temp);
-      setSelectedTemperatures(newSet);
+    // Filtrar por temperatura se uma estiver selecionada
+    if (selectedTemperature) {
+      filtered = filtered.filter(c => c.temperature === selectedTemperature);
+    }
+
+    return filtered;
+  }, [contacts, selectedDDD, selectedTemperature]);
+
+  // Handler para seleção de filtro de temperatura (exclusivo)
+  const selectTemperatureFilter = (temp: ContactTemperature | null) => {
+    setSelectedTemperature(temp);
+  };
+
+  // Handler para classificação que também atualiza o filtro
+  const handleSetTemperature = (contactId: string, temp: ContactTemperature) => {
+    const contact = contacts.find(c => c.id === contactId);
+    const oldTemp = contact?.temperature;
+
+    // Aplicar a nova temperatura
+    setTemperature(contactId, temp);
+
+    // Mostrar feedback
+    if (oldTemp !== temp) {
+      const tempLabels = { frio: 'Frio ❄️', morno: 'Morno 🌤️', quente: 'Quente 🔥' };
+      toast.success(`${contact?.name} → ${tempLabels[temp]}`);
     }
   };
 
@@ -89,13 +97,13 @@ export default function Home() {
     }
 
     try {
-      const textToCopy = copyMode === 'formatted' 
+      const textToCopy = copyMode === 'formatted'
         ? getSelectedContactsFormatted()
         : getSelectedPhones();
-      
+
       await navigator.clipboard.writeText(textToCopy);
       setCopiedBatch(true);
-      
+
       const modeLabel = copyMode === 'formatted' ? 'contato(s)' : 'telefone(s)';
       toast.success(`${selectedIds.size} ${modeLabel} copiado(s)`);
       setTimeout(() => setCopiedBatch(false), 2000);
@@ -189,7 +197,7 @@ export default function Home() {
                     Nome
                   </Button>
                 </div>
-                
+
                 <div className="flex gap-1.5">
                   <Button
                     variant="default"
@@ -318,28 +326,36 @@ export default function Home() {
             </p>
             <div className="flex gap-1">
               <Button
-                variant={selectedTemperatures.has('frio') ? 'default' : 'outline'}
+                variant={selectedTemperature === null ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => toggleTemperatureFilter('frio')}
-                className={`flex-1 text-xs h-7 ${selectedTemperatures.has('frio') ? 'bg-blue-400 hover:bg-blue-500' : ''}`}
+                onClick={() => selectTemperatureFilter(null)}
+                className={`text-xs h-7 px-2 ${selectedTemperature === null ? 'bg-gray-600 hover:bg-gray-700' : ''}`}
               >
-                Frio
+                Todos ({contacts.length})
               </Button>
               <Button
-                variant={selectedTemperatures.has('morno') ? 'default' : 'outline'}
+                variant={selectedTemperature === 'frio' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => toggleTemperatureFilter('morno')}
-                className={`flex-1 text-xs h-7 ${selectedTemperatures.has('morno') ? 'bg-yellow-400 hover:bg-yellow-500' : ''}`}
+                onClick={() => selectTemperatureFilter('frio')}
+                className={`flex-1 text-xs h-7 ${selectedTemperature === 'frio' ? 'bg-blue-500 hover:bg-blue-600 text-white' : ''}`}
               >
-                Morno
+                ❄️ Frio ({temperatureCounts.frio})
               </Button>
               <Button
-                variant={selectedTemperatures.has('quente') ? 'default' : 'outline'}
+                variant={selectedTemperature === 'morno' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => toggleTemperatureFilter('quente')}
-                className={`flex-1 text-xs h-7 ${selectedTemperatures.has('quente') ? 'bg-red-500 hover:bg-red-600' : ''}`}
+                onClick={() => selectTemperatureFilter('morno')}
+                className={`flex-1 text-xs h-7 ${selectedTemperature === 'morno' ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : ''}`}
               >
-                Quente
+                🌤️ Morno ({temperatureCounts.morno})
+              </Button>
+              <Button
+                variant={selectedTemperature === 'quente' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => selectTemperatureFilter('quente')}
+                className={`flex-1 text-xs h-7 ${selectedTemperature === 'quente' ? 'bg-red-500 hover:bg-red-600 text-white' : ''}`}
+              >
+                🔥 Quente ({temperatureCounts.quente})
               </Button>
             </div>
           </div>
@@ -351,7 +367,7 @@ export default function Home() {
               size="sm"
               onClick={() => {
                 setSelectedDDD(null);
-                setSelectedTemperatures(new Set(['frio', 'morno', 'quente'] as ContactTemperature[]));
+                setSelectedTemperature(null);
               }}
               className="text-xs border-gray-300 text-gray-600 hover:bg-gray-50"
             >
@@ -371,14 +387,14 @@ export default function Home() {
               <ContactRow
                 key={contact.id}
                 contact={contact}
-                onToggleContacted={() => toggleContacted(contact.id)}
-                onToggleSelected={() => toggleSelected(contact.id)}
+                onToggleContacted={toggleContacted}
+                onToggleSelected={toggleSelected}
                 isSelected={selectedIds.has(contact.id)}
-                onEditName={(newName) => editName(contact.id, newName)}
-                onDelete={() => deleteContact(contact.id)}
-                onSetTemperature={(temp) => setTemperature(contact.id, temp as ContactTemperature)}
-                onSetConsultor={(consultor) => setConsultorForContact(contact.id, consultor as any)}
-                getWhatsAppLink={() => getWhatsAppLink(contact, (contact.consultor as any) || 'Ana Paula')}
+                onEditName={editName}
+                onDelete={deleteContact}
+                onSetTemperature={(id, temp) => handleSetTemperature(id, temp)}
+                onSetConsultor={(id, consultor) => setConsultorForContact(id, consultor)}
+                getWhatsAppLink={getWhatsAppLink}
               />
             ))}
           </div>

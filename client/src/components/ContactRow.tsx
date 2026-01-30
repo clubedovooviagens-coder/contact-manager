@@ -35,11 +35,11 @@ export default function ContactRow({
   const getTemperatureColor = (temp: ContactTemperature) => {
     switch (temp) {
       case 'frio':
-        return 'bg-blue-100 text-blue-800 border-blue-300';
+        return 'bg-blue-500 text-white border-blue-600 shadow-sm';
       case 'morno':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+        return 'bg-yellow-500 text-white border-yellow-600 shadow-sm';
       case 'quente':
-        return 'bg-red-100 text-red-800 border-red-300';
+        return 'bg-red-500 text-white border-red-600 shadow-sm';
     }
   };
 
@@ -105,9 +105,8 @@ export default function ContactRow({
 
   return (
     <div
-      className={`flex items-center justify-between gap-3 p-4 border-b border-border transition-colors ${
-        isSelected ? 'bg-blue-50' : contact.contacted ? 'bg-green-50' : 'hover:bg-secondary'
-      }`}
+      className={`flex items-center justify-between gap-3 p-4 border-b border-border transition-colors ${isSelected ? 'bg-blue-50' : contact.contacted ? 'bg-green-50' : 'hover:bg-secondary'
+        }`}
     >
       {/* Checkbox */}
       <Checkbox
@@ -155,9 +154,8 @@ export default function ContactRow({
             ) : (
               <div className="flex items-center gap-2 group">
                 <p
-                  className={`font-medium text-foreground truncate cursor-pointer hover:text-blue-600 ${
-                    contact.contacted ? 'line-through text-muted-foreground' : ''
-                  }`}
+                  className={`font-medium text-foreground truncate cursor-pointer hover:text-blue-600 ${contact.contacted ? 'line-through text-muted-foreground' : ''
+                    }`}
                   onClick={() => setIsEditing(true)}
                   title="Clique para editar"
                 >
@@ -196,11 +194,10 @@ export default function ContactRow({
           <button
             key={temp}
             onClick={() => onSetTemperature(contact.id, temp)}
-            className={`px-2 py-1 rounded text-xs font-medium border transition-all ${
-              contact.temperature === temp
+            className={`px-2 py-1 rounded text-xs font-medium border transition-all ${contact.temperature === temp
                 ? getTemperatureColor(temp)
                 : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
-            }`}
+              }`}
             title={`Classificar como ${getTemperatureLabel(temp)}`}
           >
             {getTemperatureLabel(temp)}
@@ -239,11 +236,10 @@ export default function ContactRow({
           size="sm"
           onClick={handleToggleContacted}
           title={contact.contacted ? 'Desmarcar contato' : 'Marcar como contato feito'}
-          className={`p-1 h-auto ${
-            contact.contacted
+          className={`p-1 h-auto ${contact.contacted
               ? 'bg-green-600 hover:bg-green-700 border-green-600'
               : 'border-gray-300'
-          }`}
+            }`}
         >
           <Check className="h-4 w-4" />
         </Button>
