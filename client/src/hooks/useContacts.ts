@@ -257,6 +257,15 @@ export function useContacts() {
     return contacts.filter(c => c.temperature === temperature).length;
   };
 
+  // Classificar múltiplos contatos em lote
+  const setBatchTemperature = (ids: Set<string>, temperature: ContactTemperature) => {
+    setContacts(prev =>
+      prev.map(contact =>
+        ids.has(contact.id) ? { ...contact, temperature } : contact
+      )
+    );
+  };
+
   const setConsultorForContact = (id: string, consultor: ConsultorName) => {
     setContacts(prev =>
       prev.map(contact =>
@@ -347,6 +356,7 @@ export function useContacts() {
     deleteContact,
     addContact,
     setTemperature,
+    setBatchTemperature,
     getTemperatureCount,
     selectedConsultor,
     setSelectedConsultor,

@@ -30,6 +30,7 @@ export default function Home() {
     deleteContact,
     addContact,
     setTemperature,
+    setBatchTemperature,
     getTemperatureCount,
     selectedConsultor,
     setSelectedConsultor,
@@ -214,6 +215,43 @@ export default function Home() {
                     className="flex-1 text-xs"
                   >
                     Limpar
+                  </Button>
+                </div>
+
+                {/* Classificação em Lote */}
+                <div className="flex gap-1.5 pt-1 border-t border-blue-200">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setBatchTemperature(selectedIds, 'frio');
+                      toast.success(`${selectedIds.size} contato(s) classificado(s) como Frio ❄️`);
+                    }}
+                    className="flex-1 text-xs bg-blue-500 hover:bg-blue-600 text-white border-blue-600"
+                  >
+                    ❄️ Frio
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setBatchTemperature(selectedIds, 'morno');
+                      toast.success(`${selectedIds.size} contato(s) classificado(s) como Morno 🌤️`);
+                    }}
+                    className="flex-1 text-xs bg-yellow-500 hover:bg-yellow-600 text-white border-yellow-600"
+                  >
+                    🌤️ Morno
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setBatchTemperature(selectedIds, 'quente');
+                      toast.success(`${selectedIds.size} contato(s) classificado(s) como Quente 🔥`);
+                    }}
+                    className="flex-1 text-xs bg-red-500 hover:bg-red-600 text-white border-red-600"
+                  >
+                    🔥 Quente
                   </Button>
                 </div>
               </div>
