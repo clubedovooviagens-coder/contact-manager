@@ -266,8 +266,12 @@ export function useContacts() {
   };
 
   const getWhatsAppMessage = (contact: Contact, consultor: ConsultorName) => {
-    const emoji = '😊';
-    const baseMessage = `Olá, ${contact.name}! Tudo bem? Sou ${consultor}, Consultor de Viagens do Clube do Voo Viagens, e vim te contar uma super novidade! ${emoji}`;
+    const emoji = '✨';
+    // Pegar apenas o primeiro nome do cliente
+    const firstName = contact.name.split(' ')[0];
+    // Determinar o gênero do título baseado no consultor
+    const titulo = ['Ana Paula', 'Júlia'].includes(consultor) ? 'Consultora' : 'Consultor';
+    const baseMessage = `Olá, ${firstName}! Tudo bem? Sou ${consultor}, ${titulo} de Viagens do Clube do Voo Viagens, e vim te contar uma super novidade! ${emoji}`;
     return baseMessage;
   };
 
