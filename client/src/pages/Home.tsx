@@ -343,6 +343,21 @@ export default function Home() {
               </Button>
             </div>
           </div>
+
+          {/* Botão de Resetar Filtros */}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedDDD(null);
+                setSelectedTemperatures(new Set(['frio', 'morno', 'quente'] as ContactTemperature[]));
+              }}
+              className="text-xs border-gray-300 text-gray-600 hover:bg-gray-50"
+            >
+              ↺ Resetar Filtros
+            </Button>
+          </div>
         </div>
 
         {/* Lista de Contatos */}
