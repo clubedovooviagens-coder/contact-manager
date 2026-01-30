@@ -170,9 +170,9 @@ export default function Home() {
 
       {/* Conteúdo Principal */}
       <main className="max-w-7xl mx-auto px-3 md:px-4 py-3 md:py-4">
-        {/* Seleção em Lote */}
+        {/* Seleção em Lote - Fixa no topo ao rolar */}
         {selectedIds.size > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 md:p-3 mb-3">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 md:p-3 mb-3 sticky top-[52px] md:top-[56px] z-10 shadow-md">
             <div className="flex flex-col gap-2">
               <p className="text-xs md:text-sm font-medium text-foreground">
                 {selectedIds.size} selecionado(s)
